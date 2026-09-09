@@ -1,0 +1,10 @@
+{{ ansible_managed | comment }}
+
+[database]
+host = db.example.internal
+port = 5432
+user = {{ resolved_db_user }}
+password = {{ resolved_db_password }}
+
+[monitoring]
+api_key = {{ monitoring_api_key }}

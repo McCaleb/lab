@@ -1,0 +1,41 @@
+---
+# Lookups defined here are "lazy" (Nothing calls bw or bws until a task actually references one of these variables)
+#
+# Note on the folded scalars: every continuation line sits at the same indent as the first.
+
+bw_collection_id: ""
+
+db_admin_user: >-
+  {{ lookup('community.general.bitwarden',
+  'db-prod',
+  field='username',
+  result_count=1) | first }}
+
+db_admin_password: >-
+  {{ lookup('community.general.bitwarden',
+  'db-prod',
+  field='password',
+  result_count=1) | first }}
+
+# A custom field named api_key
+monitoring_api_key: >-
+  {{ lookup('community.general.bitwarden',
+  'monitoring-stack',
+  field='api_key',
+  result_count=1) | first }}
+
+tls_key_passphrase: >-
+  {{ lookup('community.general.bitwarden',
+  'bafba515-af11-47e6-abe3-af1200cd18b2',
+  search='id',
+  field='password') | first }}
+
+# Use these if on Secrets Manager.
+#
+# db_admin_password: >-
+#   {{ lookup('community.general.bitwarden_secrets_manager',
+#   '2bc23e48-4932-40de-a047-5524b7ddc972').value }}
+#
+# monitoring_api_key: >-
+#   {{ lookup('community.general.bitwarden_secrets_manager',
+#   '9d89af4c-eb5d-41f5-bb0f-4ae81215c768').value }}
