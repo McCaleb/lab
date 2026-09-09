@@ -1,4 +1,7 @@
 # .gitattributes
+# Example .gitattributes for readable diffs of SOPS-encrypted files.
+# Goes in the repo root.
+
 *.sops.yaml diff=sopsdiffer
 *.sops.yml  diff=sopsdiffer
 *.sops.env  diff=sopsdiffer

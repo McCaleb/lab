@@ -1,0 +1,25 @@
+# Example ansible.cfg. Copy to <repo>/ansible/ansible.cfg and commit it.
+
+[defaults]
+inventory = inventory.yml
+
+vars_plugins_enabled = host_group_vars,community.sops.sops
+
+# Vendoring the collection in the repo instead of ~/.ansible/collections:
+#   ansible-galaxy collection install -r requirements.yml -p ./collections
+
+# collections_path = ./collections
+
+[community.sops]
+# Only needed when the age key is not in the default location. 
+# The plugin sets SOPS_AGE_KEY_FILE from this for the sops call. 
+# The option is age_keyfile, one word.
+
+# age_keyfile = ~/.config/sops/age/keys.txt
+
+# Full list with their environment variables:
+#   ansible-doc -t vars community.sops.sops
+
+# binary = /usr/bin/sops
+# vars_cache = true
+# vars_stage = inventory

@@ -1,0 +1,40 @@
+# Example .sops.yaml
+#
+# Goes in the root of the repo that holds the encrypted files, rename it to
+# .sops.yaml, and commit it. Public keys only, nothing in here is secret.
+#
+# SOPS reads this file only when a file is FIRST encrypted. Editing it does
+# nothing to files that already exist, they need `sops updatekeys`.
+#
+# Config discovery follows the current working directory, not the file being
+# encrypted. Run sops from inside the repo, or pass --config.
+
+# Anchors keep the key list in one place and let creation_rules reference it.
+# &name labels a node, *name refers back to it. That is plain YAML, and the
+# parser substitutes the value before SOPS ever sees the config.
+keys:
+  - &workstation age1udsxx25s5n6tu976cxjlgkcuh2ax8p5xgcrjlpdw4ymjxxkfkuks0swe34
+  # Adding a machine: generate its key, add an anchor here and a reference
+  # below, then run `sops updatekeys` on every existing encrypted file.
+  # - &laptop age1...
+
+creation_rules:
+  # First matching rule "wins" and rules don't merge, so order specific to
+  # general and keep any catch-alls last.
+  #
+  # path_regex is a Go RE2 pattern, matched against the path as an unanchored
+  # substring search. Ending with $ and leaving off ^ means "any file anywhere
+  # in the tree whose name ends this way", which is what lets a rule work
+  # from any subdirectory. Omit path_regex entirely and the rule matches
+  # every file.
+  - path_regex: \.sops\.(yaml|yml|json|env)$
+    # A list of public keys, or one comma-separated string.
+    age:
+      - *workstation
+      # - *laptop
+
+# How SOPS writes each format back out. Nothing to do with keys, recipients,
+# or which files get encrypted.
+stores:
+  yaml:
+    indent: 2

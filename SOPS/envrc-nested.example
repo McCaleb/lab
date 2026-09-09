@@ -1,0 +1,10 @@
+# Example nested .envrc, for example <repo>/opentofu/dev-cluster/.envrc
+#
+# "source_up" runs the nearest .envrc in a *parent directory first*. 
+# Leave it out and you'll silently lose the decrypted token in this directory.
+#
+# Run `direnv allow` after creating it.
+
+source_up
+
+export TF_WORKSPACE=dev

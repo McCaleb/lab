@@ -67,7 +67,7 @@ this is the special test value
 - What is the `dotenv` we put in the `.envrc` file? 
   * `dotenv` is a bash function defined within the direnv binary.
   * Before running `.envrc`, direnv sources its standard library into the subshell, which defines `dotenv`, `use`, `watch_file`, `path_add`, `source_up`, and a few dozen others.
-  * You can read the library,it's just shell source: `direnv stdlib`
+  * You can read the library, it's just shell source: `direnv stdlib`
   * [https://github.com/direnv/direnv](https://github.com/direnv/direnv)
 
 - There is a lot you can do from within the `.envrc` file:
@@ -80,21 +80,23 @@ this is the special test value
 
 # age
  
-From the [GitHub](https://github.com/filosottile/age) repo:
+From the [GitHub](https://github.com/FiloSottile/age) repo:
 
 >age is a simple, modern and secure file encryption tool, format, and Go library. It features small explicit keys, post-quantum support, no config options, and UNIX-style composability.
 
 [Man Page](https://htmlpreview.github.io/?https://github.com/FiloSottile/age/blob/main/doc/age.1.html)
+
+## Simple Encrypt and Decrypt
 
 1. **Install**
 
 - This package is also in the Fedora repo:
     
     ```
-    dnf install direnv
+    dnf install age
     ```
 
-- The age package has 3 executables, `age`, `age-inspect`, and a`ge-keygen` (plus man pages, libraries, etc).
+- The age package has three executables, `age`, `age-inspect`, and `age-keygen` (plus man pages, libraries, etc).
 
     ```
     $ rpm -ql age
@@ -104,8 +106,6 @@ From the [GitHub](https://github.com/filosottile/age) repo:
     /usr/bin/age-keygen
     ...
     ```
-
-## Simple Encrypt and Decrypt
 
 2. **Generate keypair**
 
@@ -121,7 +121,7 @@ From the [GitHub](https://github.com/filosottile/age) repo:
     ```
 
     * First two lines are comments, ignored on parse. 
-    * [Bech32](https://bitcoin.org/bip/350/) encoded, which is why they are all one case and have a checksum built in.
+    * [Bech32](https://bitcoin.org/bip/173/) encoded, which is why they are all one case and have a checksum built in.
     * Seems like age ignores umask and sets permissions to 0600, which is nice:
 
         ```
@@ -139,9 +139,9 @@ From the [GitHub](https://github.com/filosottile/age) repo:
 
 - "Armor" option (`-a`). 
   * From the man page: "Encrypt to an ASCII-only "armored" encoding."
-  * If your're handlding the file in a way that can't handle or will mangle the binary, armoring encodes the binary data as printable ASCII. 
+  * If you're handling the file in a way that can't handle or will mangle the binary, armoring encodes the binary data as printable ASCII. 
   * It doesn't add any security and doesn't change the cryptography. It's purely about what characters end up in the file.
-  * The cost is size-- armored output runs ~ 33% larger.
+  * The cost is size. Armored output runs about 33% larger.
 
 > [!TIP]
 > If you name age identity/secret files in a consistent pattern or naming scheme, add it to `.gitignore` before you create them.
@@ -152,13 +152,12 @@ From the [GitHub](https://github.com/filosottile/age) repo:
     $ base64 /dev/urandom | head -c 20M > ./random_data
     ```
 
-3. **Encrypt**
+4. **Encrypt**
 
 - Encryption uses the public key, the `age1d7q8...` string.
 
     ```
     age -r age1d7q8kl4mat5r66mw7zjm0q88cuelkn7ge6n83vk5gl4w9psf44zqyjnhlh -o encrypted_data.age random_data
-
     ```
 
     ```
@@ -172,7 +171,7 @@ From the [GitHub](https://github.com/filosottile/age) repo:
 - `age-inspect` command, which points out the json output option.
 
     ```
-    luke@minisforum-bd895i:~/direnv-test$ age-inspect encrypted_data.age 
+    $ age-inspect encrypted_data.age 
     encrypted_data.age is an age file, version "age-encryption.org/v1".
 
     This file is encrypted to the following recipient types:
@@ -191,7 +190,7 @@ From the [GitHub](https://github.com/filosottile/age) repo:
     Tip: for machine-readable output, use --json.
     ```
 
-4. **Decrypt**
+5. **Decrypt**
 
 ```
 $ age -d -i ./my_key.secret -o decrypted_data encrypted_data.age 
@@ -200,20 +199,20 @@ Files ./decrypted_data and random_data are identical
 
 ```
 
-## Muliple Recipients
+## Multiple Recipients
 - When doing this with multiple users, the file key is encrypted with each user's public key.
 - This process creates a secret that can be decrypted by two users/people, each with their own keypair.
 - I suppose you could have a team use a single shared key in a password manager and skip the per-person setup. It works and it's simpler. But you wouldn't know who decrypted anything. And you lose the ability to remove one person without disrupting everyone else.
 
 ### The process
 This is how the process would work if two users, Luke and Oliver, were using it.
-- Luke's keypair on his machine: Two halves, public and private. Public locks, private unlocks.
+- Luke's keypair on his machine: two halves, public and private. Public locks, private unlocks.
 - Oliver's keypair on his machine: same.
 - The throwaway key: one key, no halves, secret. It locks and unlocks the file contents by itself. Random bytes, unrelated to anyone's keypair.
 
 **Setup, done once per person**
 
-1. LUke generates his keypair.
+1. Luke generates his keypair.
 
     ```
     age-keygen -o my_key.secret
@@ -246,7 +245,7 @@ This is how the process would work if two users, Luke and Oliver, were using it.
 
 **Encrypting**
 
-5. YLuke runs one command.
+5. Luke runs one command.
 
     ```
     age -R recipients.txt -o secret.age secret.txt
@@ -298,22 +297,26 @@ This is how the process would work if two users, Luke and Oliver, were using it.
 
 ## Repo layout
 
-    k8s-training/
-    ├── .sops.yaml                          # creation_rules, committed
-    ├── .gitattributes                      # diff drivers, committed
-    ├── .gitignore
-    ├── ansible/
-    │   ├── ansible.cfg                     # in-repo, not ~/.ansible.cfg
-    │   └── group_vars/
-    │       ├── all/
-    │       │   ├── main.yml                # plaintext config
-    │       │   └── secrets.sops.yaml       # encrypted, committed
-    │       └── load_balancers/
-    │           └── secrets.sops.yaml       # keepalived auth_pass
-    └── opentofu/
-        ├── secrets.sops.env                # PVE token + state passphrase
-        └── dev-cluster/
-            └── .envrc                      # loaded by direnv
+This guide will use my k8s training repo as an example for SOPS deployment.
+
+```
+  k8s-training/
+  ├── .sops.yaml                          # creation_rules, committed
+  ├── .gitattributes                      # diff drivers, committed
+  ├── .gitignore
+  ├── ansible/
+  │   ├── ansible.cfg                     # in-repo, not ~/.ansible.cfg
+  │   └── group_vars/
+  │       ├── all/
+  │       │   ├── main.yml                # plaintext config
+  │       │   └── secrets.sops.yaml       # encrypted, committed
+  │       └── load_balancers/
+  │           └── secrets.sops.yaml       # keepalived auth_pass
+  └── opentofu/
+      ├── .envrc                          # loaded by direnv
+      ├── secrets.sops.env                # PVE token + state passphrase
+      └── dev-cluster/
+```
 
 ## Part 1: Install the tools and create keys
 
@@ -332,7 +335,7 @@ This is how the process would work if two users, Luke and Oliver, were using it.
 
 2. Install the direnv shell hook.
 
-  `direnv` doesn'thing until its hook is in your shell startup. Skip this and `.envrc` files appear to be ignored.
+  `direnv` does nothing until its hook is in your shell startup. Skip this and `.envrc` files appear to be ignored.
 
     ```
     echo 'eval "$(direnv hook bash)"' >> ~/.bashrc
@@ -371,19 +374,17 @@ This is how the process would work if two users, Luke and Oliver, were using it.
 
 ### 2.1 `.sops.yaml`
 
-- At the Git repo root (Public keys only, safe to commit).
+- At the Git repo root, create `.sops.yaml` (public keys only, safe to commit).
 
   ```yaml
   # Anchors keep the key list in one place and let creation_rules reference it.
   keys:
     - &workstation age1udsxx25s5n6tu976cxjlgkcuh2ax8p5xgcrjlpdw4ymjxxkfkuks0swe34
-    - &laptop age1...
 
   creation_rules:
     - path_regex: \.sops\.(yaml|yml|json|env)$
       age:
         - *workstation
-        - *laptop
 
   stores:
     yaml:
@@ -413,7 +414,7 @@ What the sections mean:
 
 If you add a narrower rule above the general one, files matching it get only that rule's recipients. Rules don't merge or accumulate. Order specific to general, and keep any catch-all last.
 
-**Changing `.sops.yaml` doesn'thing to existing files.** 
+**Changing `.sops.yaml` does nothing to existing files.** 
 
 Recipients are baked into each file at encryption time. Editing the config only affects files created afterwards. Existing files need `sops updatekeys`. Without that step you can believe you revoked access and be wrong.
 
@@ -427,18 +428,22 @@ SOPS reads the recipient list out of the file's own metadata, then looks for a m
 
 ### 2.3 `.gitignore`
 
-- A `!` pattern only re-includes a file that an earlier pattern excluded. On its own, a file of nothing but negations doesn'thing.
-- `*.sops.env` needs a negation in this case, because `*.env` catches it first.
+- A `!` pattern only re-includes a file that an earlier pattern excluded. On its own, a file of nothing but negations does nothing.
+- The encrypted files are meant to be committed, so each extension needs a negation. `*[Ss]ecret*` catches every `secrets.sops.*` name, and `*.env` catches the dotenv file on top of that.
 
   ```gitignore
   # Plaintext secrets, never commit
-  *[Ss]ecret*
   .env
   *.env
-  !*.sops.env
   secrets.yaml
   secrets.yml
   secrets.json
+
+  # SOPS-encrypted files, safe to commit
+  !*.sops.env
+  !*.sops.yaml
+  !*.sops.yml
+  !*.sops.json
 
   # age identities
   keys.txt
@@ -472,9 +477,7 @@ SOPS re-randomizes the [initialization vector](https://en.wikipedia.org/wiki/Ini
   - But, `sops edit` re-encrypts only the values you actually changed and preserves the rest byte for byte. 
   - After an edit touching one of two values, the untouched line did not appear in the diff at all. Use `sops edit`, not an editor on the raw file.
 
-For actual plaintext diffs, add a textconv driver.
-
-`.gitattributes` at the repo root, committed:
+For actual plaintext diffs, add a textconv driver. Create `.gitattributes` at the repo root, committed:
 
   ```gitattributes
   *.sops.yaml diff=sopsdiffer-yaml
@@ -483,7 +486,7 @@ For actual plaintext diffs, add a textconv driver.
   *.sops.env  diff=sopsdiffer-env
   ```
 
-On its own that doesn't do anything. The driver name has to be bound to a command in `git config`. Because git deliberately refuses to let a checked-in file execute commands (Which is a good thing).
+On its own that doesn't do anything. The driver name has to be bound to a command in `git config`. Because git deliberately refuses to let a checked-in file execute commands (which is a good thing).
 
   ```bash
   git config diff.sopsdiffer-yaml.textconv "sops decrypt --input-type yaml --output-type yaml"
@@ -501,13 +504,13 @@ Then `git diff` shows this instead of two walls of base64:
  TF_STATE_PASSPHRASE=keep
 ```
 
-- Caveats: 
-  * `.gitattributes` is committed but `git config` is per-clone. So those three lines are part of new-machine onboarding (Part 6). 
-  * Be aware of what you just enabled: `git diff` now prints secrets to the terminal and into the pager's scrollback. That's usually what you want on a workstation, but be careful.
+Caveats: 
+  -  `.gitattributes` is committed but `git config` is per-clone. So those three lines are part of onboarding (Part 6), once per clone. 
+  - Be aware of what you just enabled: `git diff` now prints secrets to the terminal and into the pager's scrollback. That's usually what you want on a workstation, but be careful.
 
 ## Part 3: Encrypt a file
 
-> [!NOTE]
+> [!TIP]
 > Run `sops` from inside the repo, or pass `--config /path/to/.sops.yaml`.
 
 `opentofu/secrets.sops.env` starts as a normal [env file](https://www.dotenv.org/docs/security/env.html).
@@ -522,6 +525,7 @@ Result:
   ```
   $ cat opentofu/secrets.sops.env
   PROXMOX_VE_API_TOKEN=ENC[AES256_GCM,data:ntakej0Fze...,iv:w060+Vci...,tag:OicfIT6u...,type:str]
+  TF_STATE_PASSPHRASE=ENC[AES256_GCM,data:9pQm2rLd...,iv:Kx41mQav...,tag:2bTuwEc9...,type:str]
   sops_age__list_0__map_enc=-----BEGIN AGE ENCRYPTED FILE-----\n...\n-----END AGE ENCRYPTED FILE-----\n
   sops_age__list_0__map_recipient=age1udsxx25s5n6tu976cxjlgkcuh2ax8p5xgcrjlpdw4ymjxxkfkuks0swe34
   sops_lastmodified=2026-09-03T21:37:05Z
@@ -541,7 +545,8 @@ Result:
 
   `grep -c map_recipient opentofu/secrets.sops.env`
 
-Expect one line per public key in your matching creation rule. One key configured means one line. If you configured two and get one, the second key probably is wrong or a narrower rule took precedence.
+- Expect one line per public key in your matching creation rule. One key configured means one line. 
+- If you configured two and get one, the second key probably is wrong or a narrower rule took precedence.
 
   ```
   git check-ignore -q opentofu/secrets.sops.env
@@ -550,13 +555,15 @@ Expect one line per public key in your matching creation rule. One key configure
   
   `sops decrypt opentofu/secrets.sops.env`
 
-`decrypt` writes plaintext to stdout and leaves the file alone.
+- `decrypt` writes plaintext to stdout and leaves the file alone.
 
 ### Working with the file from here
 
 **`sops edit <file>` opens the plaintext in `$EDITOR` from a temp file and re-encrypts on save, touching only what changed. That's the command to use.**
 
-don't hand-edit the encrypted file and don't re-run `sops encrypt -i` on a file that already carries metadata. The MAC covers the values, so a manual edit fails the integrity check on the next decrypt with a MAC mismatch rather than anything that tells you what happened.
+
+> [!CAUTION]
+> Don't hand-edit the encrypted file, use `sops edit <file>`. And don't re-run `sops encrypt -i` on a file that already carries metadata. The [MAC](https://en.wikipedia.org/wiki/Message_authentication_code) covers the values, so a manual edit fails the integrity check on the next decrypt with a MAC mismatch rather than anything that tells you what happened.
 
 ## Part 4: Load it into the shell with direnv
 
@@ -597,14 +604,16 @@ use sops secrets.sops.env
 
 2. Tell direnv to allow use in this directory. Otherwise, you'll get this: 
 
-`direnv: error /home/luke/k8s-training/opentofu/.envrc is blocked. Run `direnv allow` to approve its content`
+```
+direnv: error /home/luke/k8s-training/opentofu/.envrc is blocked. Run "direnv allow" to approve its content
+```
 
 ```
-$cd ~/k8s-training/opentofu
+$ cd ~/k8s-training/opentofu
 $ direnv allow
 direnv: loading ~/k8s-training/opentofu/.envrc
 direnv: using sops secrets.sops.env
-direnv: export +PROXMOX_VE_API_TOKEN
+direnv: export +PROXMOX_VE_API_TOKEN +TF_STATE_PASSPHRASE
 ```
 
 What should be happening:
@@ -652,9 +661,9 @@ source_env_if_exists ../.direnv-lib.sh
 use sops secrets.sops.env
 ```
 > [!NOTE]
-> Waht's `source_env_if_exists`? It's a direnv stdlib function, same as `use`, `watch_file`, and `dotenv`. Before direnv evaluates any `.envrc`, it sources the stdlib into that subshell, then sources `~/.config/direnv/direnvrc` on top. So the stdlib functions are always available inside a `.envrc` and inside `direnvrc`.
+> What's `source_env_if_exists`? It's a direnv stdlib function, same as `use`, `watch_file`, and `dotenv`. Before direnv evaluates any `.envrc`, it sources the stdlib into that subshell, then sources `~/.config/direnv/direnvrc` on top. So the stdlib functions are always available inside a `.envrc` and inside `direnvrc`.
 
-Cost: That the function is now repo-scoped and you copy it into the next repo. I'd pick one approach, not both.
+The cost is that the function is now repo-scoped and you copy it into the next repo. I'd pick one approach, not both.
 
 ## Part 5: Adding and removing recipients
 
@@ -663,7 +672,7 @@ Recipients are baked into each file at encryption time. Remember: `.sops.yaml` i
 Let's say we want to add another recipient, for my laptop.
 
 1. On the laptop, generate its keypair and print the public key.
-2. On a machine that already has access, add both the anchor and the reference to `.sops.yaml` .
+2. On a machine that already has access, add both the anchor and the reference to `.sops.yaml`.
 3. Rewrite the recipient list on every existing encrypted file:
 
   ```
@@ -691,7 +700,7 @@ Let's say we want to add another recipient, for my laptop.
 ## Part 6: Onboarding a new machine
 
 Everything above can be split into 
-  - What the repo carries: `.sops.yaml`, `.gitattributes`, `.gitignore`, the encrypted files, and the `.envrc` files.None of it is secret and all of it is committed.
+  - What the repo carries: `.sops.yaml`, `.gitattributes`, `.gitignore`, the encrypted files, and the `.envrc` files. None of it is secret and all of it is committed.
   - What the machine needs. Per machine, in order:
     1. Install `sops`, `age` and `direnv`.
     2. Add the direnv hook to `~/.bashrc` and `exec bash`.
@@ -704,15 +713,52 @@ Everything above can be split into
 > [!TIP]
 > Keep this list in `docs/secrets.md` in the repo.
 
-## Part 7: Ansible
+# SOPS and Ansible
 
-- The direnv path covers the environment. 
-- Ansible reads its secrets a different way, through a vars plugin that decrypts `group_vars` and `host_vars` at runtime.
+- The direnv path covers the environment. OpenTofu wants its token in a variable, so the shell is the right place to put it.
+- Ansible, however, *reads its secrets a different way*...through a vars plugin that decrypts `group_vars` and `host_vars` at runtime.
+- Decryption happens on the controller, inside the process running `ansible` or `ansible-playbook`. Nothing gets installed on the managed hosts and the age key never leaves the controller.
 
-1. Install the collection
-  `ansible-galaxy collection install community.sops`
+## 1: Install the collection
 
-2. Put `ansible/ansible.cfg`, in the repo rather than `~/.ansible.cfg`:
+`community.sops` is not part of `ansible-core` (The full `ansible` package does bundle it, though).
+
+  ```
+  ansible-galaxy collection list community.sops
+  ```
+
+1. Install it for your user:
+
+  ```
+  ansible-galaxy collection install community.sops
+  ```
+
+  It (probably) lands in `~/.ansible/collections/ansible_collections/community/sops/`, which is outside the repo and outside git.
+
+2. Pin it in the repo so a fresh environment knows what it needs. 
+  - In `ansible/requirements.yml`:
+
+    ```yaml
+    collections:
+      - name: community.sops
+        version: ">=2.0.0"
+    ```
+
+    ```
+    cd ~/k8s-training/ansible
+    ansible-galaxy collection install -r requirements.yml
+    ```
+
+  - Best practice is to pin the version you actually tested against. The version that matters is the one old enough to still call the pre-3.9 sops CLI, since SOPS moved to `encrypt`/`decrypt`/`edit` subcommands and the collection learned about that later. `ansible-galaxy collection list community.sops` tells you what you have.
+
+> [!NOTE]
+> The version you choose might really matter. You may have to choose old enough to still call the pre-3.9 sops CLI, since SOPS moved to `encrypt`/`decrypt`/`edit` subcommands and the collection didn't adapt to that until later. `ansible-galaxy collection list community.sops` tells you what you have.
+
+- The collection shells out to the `sops` binary instead of reimplementing it. *So `sops` has to be on `PATH` for whoever runs the playbook*, and that same user has to be able to read the age key.
+
+## 2: Configure `ansible.cfg`
+
+`ansible/ansible.cfg`:
 
   ```ini
   [defaults]
@@ -720,27 +766,151 @@ Everything above can be split into
   vars_plugins_enabled = host_group_vars,community.sops.sops
   ```
 
-  - Order matters:.
-    1. Setting `vars_plugins_enabled` replaces the default list rather than adding to it. Drop `host_group_vars` and plain `group_vars/all/main.yml` stops loading entirely.
-    2. `secrets.sops.yaml` ends in `.yaml`, which is a valid extension as far as `host_group_vars` is concerned, so that plugin loads the file too and hands you the ciphertext as variable values. 
-    3. Vars plugins run in the order listed and later results win, so `community.sops.sops` must come after `host_group_vars`. Reverse them and every secret resolves to a literal `ENC[AES256_GCM,...]` string with no error anywhere.
+**Know which config file you actually using by running `ansible--version`!** 
 
-3. Verify:
+> [!TIP]
+> Ansible refuses to load `ansible.cfg` out of the current directory when that directory is world-writable. And the errors make it tough to determine why.
 
-  ```bash
+**Both plugins, with `community.sops.sops` last.**
+
+  1. `vars_plugins_enabled` replaces the default list rather than adding to it. The default is `host_group_vars` on its own, so leaving it out here stops `group_vars/all/main.yml` from loading at all.
+  2. `secrets.sops.yaml` ends in `.yaml`, which is an extension `host_group_vars` accepts, so that plugin reads the encrypted file too and hands you `ENC[AES256_GCM,...]` strings as variable values.
+  3. Each plugin's results are merged in the order the plugins ran and the last one to set a key wins. Current ansible-core runs them in the order you list them here, so `community.sops.sops` goes last and its decrypted values land on top of the ciphertext.
+
+> [!TIP]
+> Older ansible-core versions *appended* collection plugins after the built-in ones, regardless of what the list said. That's why you'll find people saying the order doesn't matter. But it does now.
+
+One visible side effect of `host_group_vars` reading the file too: 
+  - You end up with a variable named `sops` holding that file's own metadata, because the decrypted data has no such key to overwrite it with. 
+  - It's harmless, and it can be useful. If `sops` is defined and your secret is plaintext, both plugins ran and the right one "won".
+
+## 3: Create an encrypted `group_vars` file
+
+The file has to end in `.sops.yaml`, `.sops.yml` or `.sops.json`. That's what the vars plugin looks for. Hidden files are ignored.
+
+1. Create it encrypted from the get-go. On a path that doesn't exist yet, `sops edit` says so, generates the data key, and opens `$SOPS_EDITOR` or `$EDITOR` on a template. Nothing plaintext is ever written to the repo.
+
+  ```
+  cd ~/k8s-training
+  mkdir -p ansible/group_vars/load_balancers
+  sops edit ansible/group_vars/load_balancers/secrets.sops.yaml
+  ```
+
+  Replace the sample content with your own. Top-level keys become variable names:
+
+  ```yaml
+  keepalived_auth_pass: spaghettiPolicy
+  ```
+
+  Same command edits it from then on. Run it from inside the repo so SOPS finds `.sops.yaml` and the creation rule applies.
+
+2. If you already have the value in a plaintext file, encrypt in place instead:
+
+  ```
+  sops encrypt -i ansible/group_vars/load_balancers/secrets.sops.yaml
+  ```
+
+  Mind the gap. Between writing that file and encrypting it, a secret is sitting in the working tree under a name `.gitignore` probably does not ignore. Maybe push a `.gitignore` vefore doing it.
+
+3. Confirm the result before you commit it.
+
+  ```
+  sops filestatus ansible/group_vars/load_balancers/secrets.sops.yaml
+  ```
+
+  Expect `{"encrypted":true}`. To count recipients in a YAML file, look for the `recipient:` keys under the `sops:` block. `map_recipient` from Part 3 is the flat dotenv rendering and won't match here:
+
+  ```
+  grep -c 'recipient:' ansible/group_vars/load_balancers/secrets.sops.yaml
+  ```
+
+  And confirm git will actually track it:
+
+  ```
+  git check-ignore -q ansible/group_vars/load_balancers/secrets.sops.yaml
+  echo $?      # expect 1
+  ```
+
+The directory name under `group_vars/` is the group name, and `group_vars/` has to sit next to the inventory file or next to the playbook. `ansible/inventory.yml` alongside `ansible/group_vars/` satisfies that. A directory that doesn't match any group in the inventory is simply never applied to anything, with no error to tell you so.
+
+> [!NOTE]
+> `.sops.yaml` at the repo root is the SOPS config and is never encrypted. `secrets.sops.yaml` under `group_vars/` is an encrypted vars file. The names are nearly identical and the creation rule regex matches both, so don't let tab completion walk you into `sops encrypt -i .sops.yaml`.
+
+## 7.4 Verify
+
+1. Confirm the config took effect and the plugins are enabled in the right order.
+
+  ```
   cd ~/k8s-training/ansible
+  ansible-config dump --only-changed | grep -i variable_plugins
+  ```
+
+  The ini key is `vars_plugins_enabled` but the setting is named `VARIABLE_PLUGINS_ENABLED`, so grep for the setting name:
+
+  ```
+  VARIABLE_PLUGINS_ENABLED(/home/luke/k8s-training/ansible/ansible.cfg) = ['host_group_vars', 'community.sops.sops']
+  ```
+
+  If the path in the parentheses isn't the repo, nothing below this point will behave.
+
+2. Resolve a variable the way a play would.
+
+  ```
   ansible load_balancers -m debug -a 'var=keepalived_auth_pass'
   ```
 
-- Plaintext means it is set up correctly. 
-- `ENC[AES256_GCM,...]` means the ordering is probably wrong. 
-- `VARIABLE IS NOT DEFINED!` means the plugin is not enabled at all, or `ansible.cfg` was not picked up because you ran from the wrong directory.
+  `debug` is an action plugin that runs on the controller, so this resolves the variable without connecting to the load balancers.
 
-Ansible reads `ansible.cfg` from the current working directory, so run from `ansible/`. It also silently ignores a `cwd` config file if the directory is world-writable.
+  - Plaintext means it's set up correctly. 
+  - `ENC[AES256_GCM,...]` means `host_group_vars` won the merge, or the sops plugin isn't enabled at all. Check 7.2 and step 1 above. 
+  - `VARIABLE IS NOT DEFINED!` means the wrong `ansible.cfg` was picked up, or the directory name under `group_vars/` doesn't match a group in the inventory. 
+  - `Could not match supplied host pattern` means the group has no hosts yet, so there's nothing for the variable to attach to. Use step 3 instead until the inventory is populated. 
+  - A sops error like `no key could decrypt the data` or `sops: command not found` is a key or `PATH` problem on the controller. See 7.5.
 
-The `sops` binary has to be on `PATH` on the controller and the age key readable by the user running the playbook. If you keep the key somewhere other than the default path:
+  Add `-vvvv` and the plugin narrates which files it decrypted. It's chatty, but it's the fastest way to tell "not running" from "running and losing the merge".
+
+3. Dump the whole inventory when you want to see everything at once.
+
+  ```
+  ansible-inventory --list --yaml
+  ```
+
+  `ansible-inventory` loads vars plugins itself rather than waiting for a task to demand them, so this decrypts even on an inventory nothing has run against. It's the check that works before any host exists. The exception is an explicit `vars_stage = task`, which keeps the plugin out of this path entirely.
+
+> [!CAUTION]
+> Both of those commands print secrets to the terminal and into the pager's scrollback. Inside a playbook, you probably want to put `no_log: true` on any task that touches a decrypted value, otherwise it lands in the job output and in `ANSIBLE_LOG_PATH`.
+
+## 7: Notes
+
+**The key has to be wherever Ansible runs.** 
+
+On a workstation that's `~/.config/sops/age/keys.txt` from Part 1. In AWX or AAP it's the execution environment, which needs the `sops` binary and the key both, neither of which a stock EE ships. Managed hosts need neither, since they only ever receive the decrypted value as part of a task.
+
+**Point at the key only if it isn't in the default place.**
 
   ```ini
   [community.sops]
-  age_key_file = ~/.config/sops/age/keys.txt
+  age_keyfile = ~/.config/sops/age/keys.txt
   ```
+
+The option is `age_keyfile`, one word, and the plugin uses it to set `SOPS_AGE_KEY_FILE` for the sops call. Exporting that variable yourself does the same job, which is one more thing direnv could carry if the key ever lives somewhere unusual.
+
+**A file with an encrypted name and no encryption is a hard error.** 
+
+The plugin refuses a `.sops.yaml` file that carries no SOPS metadata rather than loading it as-is, which is nearly always you forgetting to encrypt a new file. `handle_unencrypted_files` can loosen that. Encrypt the file instead.
+
+**Decryption is cached for the run.** 
+
+`cache` defaults to true, so each file is decrypted once however many tasks ask for it. A `sops edit` partway through a run won't be seen. By default the plugin runs on demand at task time, following the global `run_vars_plugins` setting, and `vars_stage = inventory` under `[community.sops]` moves that to a single pass right after inventory parsing instead.
+
+**Decrypted values are ordinary Ansible variables.** 
+
+Which means Jinja gets a look at them. A generated password containing `{{` or `{%` will be templated when it's used, and you'll get an undefined-variable error or a mangled value rather than anything that points at the real cause. Worth knowing before you paste in something from a password generator.
+
+**The rest of the knobs live in the same section.** 
+
+`binary`, `config_path`, `vars_cache`, `vars_stage`, `valid_extensions`, and so on. `ansible-doc -t vars community.sops.sops` lists all of them with their environment variable equivalents.
+
+**The vars plugin only ever looks at `group_vars` and `host_vars`.** 
+
+For an encrypted file somewhere else, the collection also ships the `community.sops.sops` lookup, a `community.sops.decrypt` filter, and `community.sops.load_vars` for pulling one in mid-play.

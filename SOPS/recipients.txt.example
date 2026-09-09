@@ -1,0 +1,19 @@
+# Example age recipient list, for plain age:
+#
+#   age -R recipients.txt -o secret.age secret.txt
+#
+# Public keys only, one per line. Blank lines and lines starting with # are
+# ignored. Nothing here is secret. Each person generates their own keypair
+# and sends only the public half, the private key never leaves their machine.
+#
+# age encrypts the file once with a throwaway key, then stores one copy of
+# that key per recipient. Any one private key opens the file on its own.
+#
+# This file is for age by itself. SOPS does not read it, SOPS takes its
+# recipients from .sops.yaml.
+
+# luke
+age1d7q8kl4mat5r66mw7zjm0q88cuelkn7ge6n83vk5gl4w9psf44zqyjnhlh
+
+# oliver
+age1lggyhqrw2nlhcxprm67z43rta597azn8gk38fnwdk9a3v6e9acqsp4dfve

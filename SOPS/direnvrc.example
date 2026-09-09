@@ -1,0 +1,17 @@
+# Example ~/.config/direnv/direnvrc
+#
+# Defines use_sops so any .envrc on this machine can call `use sops <file>`.
+# A fresh system or install won't have this, and .envrc files
+# that call it fail with a "command not found" error until this it exists.
+# The repo-local alternative is direnv-lib.sh.example.
+#
+# Requires sops and direnv on PATH and an age identity sops can find, which
+# is ~/.config/sops/age/keys.txt unless SOPS_AGE_KEY_FILE says otherwise.
+#
+# From https://github.com/direnv/direnv/wiki/Sops
+
+use_sops() {
+    local path=${1:-$PWD/secrets.yaml}
+    eval "$(sops -d --output-type dotenv "$path" | direnv dotenv bash /dev/stdin)"
+    watch_file "$path"
+}

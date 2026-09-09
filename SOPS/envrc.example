@@ -1,0 +1,17 @@
+# Example .envrc
+#
+# Copy to the directory holding your encrypted dotenv file, for example
+# <repo>/opentofu/.envrc, then run `direnv allow` there. 
+#
+# `direnv allow` is per-machine and keyed to this file's content, so editing
+# it revokes the approval and you allow again.
+
+# Non-sensitive settings stay plain so they read in diffs and review.
+export PROXMOX_VE_ENDPOINT="https://172.16.1.201:8006"
+
+# Decrypts secrets.sops.env and exports the keys in it. 
+# The path is relative to this file's own directory, and direnv reloads when that file changes.
+#
+# Watch the output on `cd`: `direnv: export +PROXMOX_VE_API_TOKEN` means it worked. 
+
+use sops secrets.sops.env

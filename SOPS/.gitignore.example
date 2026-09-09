@@ -1,12 +1,21 @@
+# Example .gitignore for a repo using SOPS, age and direnv.
+#
+# Check a path before you create it, since check-ignore works on paths that
+# do not exist yet:
+#
+#   git check-ignore -v opentofu/secrets.sops.env
+#
+# With -v, a negated match still exits 0 and prints the ! line that matched.
+# Without -v, an encrypted file should exit 1, meaning git will track it.
+
 # Plaintext secrets, never commit
-*[Ss]ecret*
 .env
 *.env
 secrets.yaml
 secrets.yml
 secrets.json
 
-# SOPS-encrypted files, safe to commit
+# SOPS-encrypted files, safe to commit.
 !*.sops.env
 !*.sops.yaml
 !*.sops.yml
