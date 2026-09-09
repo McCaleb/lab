@@ -1,0 +1,22 @@
+# Plaintext secrets, never commit
+*[Ss]ecret*
+.env
+*.env
+secrets.yaml
+secrets.yml
+secrets.json
+
+# SOPS-encrypted files, safe to commit
+!*.sops.env
+!*.sops.yaml
+!*.sops.yml
+!*.sops.json
+
+# age identities
+keys.txt
+*.agekey
+*.secret
+
+# direnv
+.direnv/
+.envrc.local

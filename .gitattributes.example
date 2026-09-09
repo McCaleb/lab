@@ -1,0 +1,4 @@
+# .gitattributes
+*.sops.yaml diff=sopsdiffer
+*.sops.yml  diff=sopsdiffer
+*.sops.env  diff=sopsdiffer

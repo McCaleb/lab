@@ -1,0 +1,8 @@
+# Public keys only. Safe to commit to a public repo.
+creation_rules:
+  - path_regex: \.sops\.(yaml|yml|json|env)$
+    age:
+      - age1udsxx25s5n6tu976cxjlgkcuh2ax8p5xgcrjlpdw4ymjxxkfkuks0swe34
+stores:
+    yaml:
+        indent: 2
