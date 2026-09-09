@@ -1,7 +1,9 @@
-# ToC
+# Contents
 
 [age](#age)
+
 [direnv](#direnv)
+
 [SOPS](#SOPS)
 
 # direnv
