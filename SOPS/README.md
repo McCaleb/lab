@@ -1,3 +1,9 @@
+# ToC
+
+[age](#age)
+[direnv](#direnv)
+[SOPS](#SOPS)
+
 # direnv
 
 From the [docs](https://github.com/direnv/direnv):
@@ -287,9 +293,9 @@ This is how the process would work if two users, Luke and Oliver, were using it.
 
 ---
 
-# SOPS: Secrets OPerationS
+# SOPS 
 
-[SOPS](https://github.com/getsops/sops) is an editor of encrypted files that supports YAML, JSON, ENV, INI and BINARY formats and encrypts with AWS KMS, GCP KMS, Azure Key Vault, HuaweiCloud KMS, age, and PGP.
+[Secrets OPerationS (SOPS)](https://github.com/getsops/sops) is an editor of encrypted files that supports YAML, JSON, ENV, INI and BINARY formats and encrypts with AWS KMS, GCP KMS, Azure Key Vault, HuaweiCloud KMS, age, and PGP.
 
 - `age` supplies the keypairs and the multi-recipient model. 
 - `direnv` supplies the mechanism that loads decrypted values into a shell on `cd` and unloads them on the way out. 
